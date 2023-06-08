@@ -45,11 +45,10 @@ type Model struct {
 
 // Service holds a service configuration (can only be of one type at the same time).
 type Service struct {
-	LoadBalancer        *ServersLoadBalancer `json:"loadBalancer,omitempty" toml:"loadBalancer,omitempty" yaml:"loadBalancer,omitempty" export:"true"`
-	HighestRandomWeight *HighestRandomWeight `json:"highestRandomWeight,omitempty" toml:"highestRandomWeight,omitempty" yaml:"highestRandomWeight,omitempty" label:"-" export:"true"`
-	Weighted            *WeightedRoundRobin  `json:"weighted,omitempty" toml:"weighted,omitempty" yaml:"weighted,omitempty" label:"-" export:"true"`
-	Mirroring           *Mirroring           `json:"mirroring,omitempty" toml:"mirroring,omitempty" yaml:"mirroring,omitempty" label:"-" export:"true"`
-	Failover            *Failover            `json:"failover,omitempty" toml:"failover,omitempty" yaml:"failover,omitempty" label:"-" export:"true"`
+	LoadBalancer *ServersLoadBalancer `json:"loadBalancer,omitempty" toml:"loadBalancer,omitempty" yaml:"loadBalancer,omitempty" export:"true"`
+	Weighted     *WeightedRoundRobin  `json:"weighted,omitempty" toml:"weighted,omitempty" yaml:"weighted,omitempty" label:"-" export:"true"`
+	Mirroring    *Mirroring           `json:"mirroring,omitempty" toml:"mirroring,omitempty" yaml:"mirroring,omitempty" label:"-" export:"true"`
+	Failover     *Failover            `json:"failover,omitempty" toml:"failover,omitempty" yaml:"failover,omitempty" label:"-" export:"true"`
 }
 
 // +k8s:deepcopy-gen=true
@@ -122,39 +121,10 @@ type WeightedRoundRobin struct {
 
 // +k8s:deepcopy-gen=true
 
-// HighestRandomWeight is a weighted round robin load-balancer of services.
-type HighestRandomWeight struct {
-	Services []HRWService `json:"services,omitempty" toml:"services,omitempty" yaml:"services,omitempty" export:"true"`
-	Sticky   *Sticky      `json:"sticky,omitempty" toml:"sticky,omitempty" yaml:"sticky,omitempty" export:"true"`
-	Servers  []Server     `json:"servers,omitempty" toml:"servers,omitempty" yaml:"servers,omitempty" label-slice-as-struct:"server" export:"true"`
-	// HealthCheck enables automatic self-healthcheck for this service, i.e.
-	// whenever one of its children is reported as down, this service becomes aware of it,
-	// and takes it into account (i.e. it ignores the down child) when running the
-	// load-balancing algorithm. In addition, if the parent of this service also has
-	// HealthCheck enabled, this service reports to its parent any status change.
-	HealthCheck *HealthCheck `json:"healthCheck,omitempty" toml:"healthCheck,omitempty" yaml:"healthCheck,omitempty" label:"allowEmpty" file:"allowEmpty" kv:"allowEmpty" export:"true"`
-}
-
-// +k8s:deepcopy-gen=true
-
-// WRRService is a reference to a service load-balanced with hrw weighted round-robin.
+// WRRService is a reference to a service load-balanced with weighted round-robin.
 type WRRService struct {
 	Name   string `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty" export:"true"`
 	Weight *int   `json:"weight,omitempty" toml:"weight,omitempty" yaml:"weight,omitempty" export:"true"`
-}
-
-// +k8s:deepcopy-gen=true
-
-// HRWService is a reference to a service load-balanced with weighted round-robin.
-type HRWService struct {
-	Name   string `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty" export:"true"`
-	Weight *int   `json:"weight,omitempty" toml:"weight,omitempty" yaml:"weight,omitempty" export:"true"`
-}
-
-// SetDefaults Default values for a WRRService.
-func (w *HRWService) SetDefaults() {
-	defaultWeight := 1
-	w.Weight = &defaultWeight
 }
 
 // SetDefaults Default values for a WRRService.
@@ -169,6 +139,7 @@ func (w *WRRService) SetDefaults() {
 type Sticky struct {
 	// Cookie defines the sticky cookie configuration.
 	Cookie *Cookie `json:"cookie,omitempty" toml:"cookie,omitempty" yaml:"cookie,omitempty" label:"allowEmpty" file:"allowEmpty" kv:"allowEmpty" export:"true"`
+	IP     *IP     `json:"ip,omitempty" toml:"cookie,omitempty" yaml:"ip,omitempty" label:"allowEmpty" file:"allowEmpty" kv:"allowEmpty" export:"true"`
 }
 
 // +k8s:deepcopy-gen=true
@@ -184,6 +155,14 @@ type Cookie struct {
 	// SameSite defines the same site policy.
 	// More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
 	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty" export:"true"`
+}
+
+// +k8s:deepcopy-gen=true
+
+// IP holds the sticky configuration based on IP source.
+type IP struct {
+	// Header defines the Header where the IP should be fetched.
+	Header string `json:"header,omitempty" toml:"header,omitempty" yaml:"header,omitempty" export:"true"`
 }
 
 // +k8s:deepcopy-gen=true
